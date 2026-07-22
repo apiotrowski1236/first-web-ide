@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Website Maker</title>
+    <!-- Set the color theme before the first paint so there's no flash: use the
+         saved choice if there is one, otherwise follow the OS preference. -->
+    <script>
+      try {
+        var saved = localStorage.getItem('iwide-theme')
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        document.documentElement.setAttribute('data-theme', theme)
+      } catch (e) { /* localStorage/matchMedia unavailable — default to light */ }
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Top menu bar -->
+      <header id="menubar">
+        <span class="brand">Indie&nbsp;Web&nbsp;IDE</span>
+        <div class="menu-actions">
+          <button id="btn-new-file" title="Add a new file to this site">+ New file</button>
+          <button id="btn-add-image" title="Add a picture from your computer to the images folder">Add image…</button>
+          <button id="btn-import" title="Open a folder from your computer">Import folder…</button>
+          <button id="btn-export" title="Download your whole site as a .zip">Export .zip</button>
+          <button id="btn-projects" title="Switch between your sites">Projects ▾</button>
+          <button id="btn-theme" title="Switch between light and dark mode" aria-pressed="false"></button>
+          <span id="save-status" class="save-status" title="Your work saves automatically in the browser - but still download it as a zip!">Saved</span>
+          <span id="persist-badge" class="persist-badge" hidden></span>
+        </div>
+      </header>
+
+      <!-- Main three-pane area -->
+      <main id="workbench">
+        <aside id="sidebar">
+          <div class="pane-title">Files</div>
+          <ul id="file-tree" class="file-tree"></ul>
+        </aside>
+
+        <section id="editor-region">
+          <div id="tabs" class="tabs"></div>
+          <div id="editor-host" class="editor-host"></div>
+        </section>
+
+        <section id="preview-region">
+          <div class="preview-toolbar">
+            <span class="pane-title">Live Preview</span>
+            <label class="preview-page-label">
+              Page:
+              <select id="preview-page"></select>
+            </label>
+            <button id="btn-refresh-preview" title="Reload the preview">↻</button>
+          </div>
+          <iframe
+            id="preview-frame"
+            class="preview-frame"
+            title="Live preview of your website"
+            sandbox="allow-scripts allow-modals allow-popups allow-forms"
+          ></iframe>
+        </section>
+      </main>
+
+      <!-- Bottom panel: Problems + Console tabs -->
+      <footer id="bottom-panel">
+        <div class="bottom-tabs">
+          <button class="bottom-tab is-active" data-panel="problems">
+            Problems <span id="problems-count" class="badge">0</span>
+          </button>
+          <button class="bottom-tab" data-panel="console">
+            Console <span id="console-count" class="badge">0</span>
+          </button>
+          <button id="btn-clear-console" class="clear-btn" title="Clear the console">Clear</button>
+        </div>
+        <div id="problems-panel" class="bottom-body is-active"></div>
+        <div id="console-panel" class="bottom-body"></div>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

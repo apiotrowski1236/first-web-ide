@@ -1,0 +1,33 @@
+{
+  "name": "indie-web-ide",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A simple, Safari-friendly HTML/CSS/JS editor for beginners, with clear error messages.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.18.0",
+    "@codemirror/commands": "^6.6.0",
+    "@codemirror/lang-css": "^6.3.0",
+    "@codemirror/lang-html": "^6.4.9",
+    "@codemirror/lang-javascript": "^6.2.2",
+    "@codemirror/language": "^6.10.0",
+    "@codemirror/lint": "^6.8.0",
+    "@codemirror/search": "^6.5.0",
+    "@codemirror/state": "^6.4.0",
+    "@codemirror/view": "^6.34.0",
+    "codemirror": "^6.0.1",
+    "css-tree": "^2.3.1",
+    "fflate": "^0.8.2",
+    "htmlhint": "^1.1.4",
+    "idb": "^8.0.0"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^23.11.1",
+    "vite": "^5.4.0"
+  }
+}
