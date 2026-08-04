@@ -117,6 +117,8 @@ $RECYCLE.BIN/
 
 ### Less ###
 *.css
+# ...but this project's stylesheets are hand-written source, not Less output.
+!src/**/*.css
 
 
 ### grunt ###
