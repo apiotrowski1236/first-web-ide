@@ -69,6 +69,18 @@ export const MESSAGES = {
     body: `Raw \`<\` or \`>\` inside text can confuse the browser.`,
     fix: `Write \`&lt;\` for \`<\` and \`&gt;\` for \`>\`.`,
   }),
+  'inline-style-disabled': (ctx) => ({
+    title: `Keep your styling in your CSS file`,
+    body: ctx.attr
+      ? `\`${ctx.attr}\` only changes this one tag, and it's hard to find and update later. Your page is already linked to \`css/style.css\`.`
+      : `A \`style\` attribute only changes this one tag, and it's hard to find and update later. Your page is already linked to \`css/style.css\`.`,
+    fix: `Give the tag a \`class\`, like \`<p class="intro">\`, then write a rule in \`css/style.css\`: \`.intro { color: red; }\`.`,
+  }),
+  'style-disabled': () => ({
+    title: `Move this \`<style>\` block into \`css/style.css\``,
+    body: `Your page already loads \`css/style.css\` with the \`<link>\` tag, so CSS belongs there, not inside the HTML.`,
+    fix: `Cut the rules out of \`<style>\`, paste them into \`css/style.css\`, and delete the empty \`<style></style>\` tags.`,
+  }),
 
   // ---------------- CSS ----------------
   'css-missing-semicolon': () => ({

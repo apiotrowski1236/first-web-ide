@@ -5,7 +5,7 @@ import { languageOf, isBinary } from '../util/paths.js'
  * @typedef {Object} FileRecord
  * @property {string} path      normalized project-relative path, e.g. "css/style.css"
  * @property {string|Blob} content  text for code files, Blob for binary assets
- * @property {string} language  'html' | 'css' | 'javascript' | 'image' | 'text'
+ * @property {string} language  'html' | 'css' | 'javascript' | 'image' | 'audio' | 'text'
  */
 
 /**
@@ -31,7 +31,7 @@ export function makeId() {
 
 /** Files for a fresh project — a tiny working indie-web page. */
 export function starterFiles() {
-  // A very simple starter page: one heading, one paragraph, one image.
+  // A very simple starter page: one heading, one paragraph, one image, one sound.
   // Every line has a comment explaining what it does.
   const html = `<!DOCTYPE html>
 <!-- Tells the browser this is a modern (HTML5) web page. -->
@@ -55,6 +55,8 @@ export function starterFiles() {
     <p>This is my very own corner of the web. I made it by hand.</p>
     <!-- An image. "src" is which file to show; "alt" describes it in words. -->
     <img src="images/sample.svg" alt="A colorful drawing of a sun over green hills" />
+    <!-- A sound. "controls" adds a play button; "src" is which sound file to play. -->
+    <audio controls src="audio/sample.wav"></audio>
   </body>
 </html>
 `
@@ -97,7 +99,46 @@ img {
     'index.html': makeFile('index.html', html),
     'css/style.css': makeFile('css/style.css', css),
     'images/sample.svg': makeFile('images/sample.svg', sampleImage),
+    // A tiny sample sound lives in audio/ so the folder exists from day one.
+    'audio/sample.wav': makeFile('audio/sample.wav', makeSampleSound()),
   }
+}
+
+/**
+ * Build a very short "ding" as a WAV file in memory (mono, 8-bit, 8000 Hz,
+ * about 0.4 s, ~3 KB). Generating it here means no binary file has to be
+ * committed to the repo. Returns a Blob, which is how binary assets are stored.
+ */
+export function makeSampleSound() {
+  const sampleRate = 8000
+  const seconds = 0.4
+  const n = Math.round(sampleRate * seconds)
+  const bytes = new Uint8Array(44 + n)
+  const view = new DataView(bytes.buffer)
+  const writeStr = (off, str) => { for (let i = 0; i < str.length; i++) bytes[off + i] = str.charCodeAt(i) }
+
+  // RIFF/WAVE header (44 bytes, little-endian).
+  writeStr(0, 'RIFF')
+  view.setUint32(4, 36 + n, true)       // file size minus the first 8 bytes
+  writeStr(8, 'WAVE')
+  writeStr(12, 'fmt ')
+  view.setUint32(16, 16, true)          // fmt chunk size
+  view.setUint16(20, 1, true)           // PCM
+  view.setUint16(22, 1, true)           // mono
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate, true)  // byte rate = sampleRate * 1 channel * 1 byte
+  view.setUint16(32, 1, true)           // block align
+  view.setUint16(34, 8, true)           // bits per sample
+  writeStr(36, 'data')
+  view.setUint32(40, n, true)
+
+  // Samples: a soft A5 (880 Hz) tone that fades out, centred on 128 (8-bit unsigned).
+  for (let i = 0; i < n; i++) {
+    const t = i / sampleRate
+    const fade = Math.exp(-6 * t)
+    bytes[44 + i] = Math.round(128 + 100 * fade * Math.sin(2 * Math.PI * 880 * t))
+  }
+  return new Blob([bytes], { type: 'audio/wav' })
 }
 
 /** Build a brand-new project object. */

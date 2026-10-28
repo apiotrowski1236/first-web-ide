@@ -14,6 +14,9 @@ const RULESET = {
   'id-unique': true,
   'src-not-empty': true,
   'spec-char-escape': true,
+  // Class rule: all styling lives in css/style.css. Both are warnings, not errors.
+  'inline-style-disabled': true,
+  'style-disabled': true,
 }
 
 /** SVG tags we shouldn't flag as "unknown HTML". */
@@ -53,6 +56,7 @@ export function lintHtml(text, pos) {
     else if (id === 'tagname-lowercase') ctx.tag = tagFromToken(bracketToken(m.message, 0))
     else if (id === 'attr-lowercase') ctx.attr = bracketToken(m.message, 0).toLowerCase()
     else if (id === 'id-unique') ctx.id = bracketToken(m.message, 0)
+    else if (id === 'inline-style-disabled') ctx.attr = bracketToken(m.message, 0)
     out.push({ ruleId: id, ctx, severity: m.type === 'warning' ? 'warning' : 'error', from, to })
   }
 
