@@ -21,6 +21,6 @@ export function cmLintSource(view) {
     severity: d.severity,
     message: messageText(d),
     renderMessage: () => messageNode(d),
-    source: 'Indie Web IDE',
+    source: 'Website Maker',
   }))
 }

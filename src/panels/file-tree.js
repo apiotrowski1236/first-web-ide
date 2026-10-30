@@ -1,7 +1,7 @@
 // @ts-check
 import { store } from '../store/project-store.js'
-import { promptText, confirmDialog } from '../ui/dialogs.js'
-import { validateFilename, dirname, basename, languageOf } from '../util/paths.js'
+import { promptText, confirmDialog, promptNewFile } from '../ui/dialogs.js'
+import { validateFilename, validateFoldername, validateBasename, dirname, basename, languageOf } from '../util/paths.js'
 import { forgetFile, renameCached } from '../editor/editor.js'
 
 /**
@@ -77,40 +77,48 @@ function fileRow(path, indented) {
 
 function iconFor(path) {
   const lang = languageOf(path)
-  return lang === 'html' ? '📄' : lang === 'css' ? '🎨' : lang === 'javascript' ? '⚙️' : lang === 'image' ? '🖼' : '📃'
+  return lang === 'html' ? '📄' : lang === 'css' ? '🎨' : lang === 'javascript' ? '⚙️' : lang === 'image' ? '🖼' : lang === 'audio' ? '🎵' : '📃'
 }
 
-/** Prompt for a new file name and create it. */
+/** Every folder that currently holds a file, sorted (no "" for top level). */
+function existingFolders() {
+  const dirs = new Set()
+  for (const p of store.paths()) {
+    // Include parent folders too, so "images/icons" also offers "images".
+    const parts = dirname(p).split('/').filter(Boolean)
+    for (let i = 1; i <= parts.length; i++) dirs.add(parts.slice(0, i).join('/'))
+  }
+  return [...dirs].sort()
+}
+
+/** Ask which folder a new file belongs in and what to call it, then create it. */
 export async function newFile() {
-  const name = await promptText({
-    title: 'New file',
-    message: 'Name it like index.html, css/style.css or script.js.',
-    placeholder: 'about.html',
-    confirmLabel: 'Create',
-    validate: (v) => {
-      const err = validateFilename(v)
-      if (err) return err
-      if (store.getFile(v)) return 'A file with that name already exists.'
-      return ''
-    },
+  const path = await promptNewFile({
+    folders: existingFolders(),
+    validateFolder: validateFoldername,
+    validateName: validateBasename,
+    exists: (p) => !!store.getFile(p),
   })
-  if (!name) return
-  const content = starterContentFor(name)
-  store.addFile(name, content)
-  store.setActive(name)
+  if (!path) return
+  const content = starterContentFor(path)
+  store.addFile(path, content)
+  store.setActive(path)
 }
 
 function starterContentFor(path) {
   const lang = languageOf(path)
   if (lang === 'html') {
     const title = basename(path).replace(/\.[^.]+$/, '')
+    // Pages inside a folder need "../" to reach css/ at the top level.
+    const depth = dirname(path) ? dirname(path).split('/').length : 0
+    const up = '../'.repeat(depth)
     return `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${title}</title>
-    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="${up}css/style.css" />
   </head>
   <body>
     <h1>${title}</h1>

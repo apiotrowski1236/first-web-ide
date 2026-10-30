@@ -19,10 +19,14 @@ import { initConsoleBridge } from './preview/console-bridge.js'
 
 import { importFromFileList, importFromDataTransfer } from './io/import-folder.js'
 import { importImageFiles, formatBytes } from './io/import-image.js'
+import { importAudioFiles, MAX_AUDIO_BYTES } from './io/import-audio.js'
+import { showImageTips } from './ui/image-tips.js'
+import { initToolbarColor } from './ui/toolbar-color.js'
 import { exportProjectZip } from './io/export-zip.js'
 import { openProjectsDialog } from './ui/projects.js'
 import { confirmDialog } from './ui/dialogs.js'
 import { initThemeToggle } from './ui/theme.js'
+import { initCollapsibles, setCollapsed } from './ui/collapse.js'
 
 const $ = (sel) => /** @type {HTMLElement} */ (document.querySelector(sel))
 
@@ -101,6 +105,8 @@ async function openInitialProject() {
 function wireMenu() {
   $('#btn-new-file').addEventListener('click', () => newFile())
   $('#btn-add-image').addEventListener('click', triggerImageImport)
+  $('#btn-add-audio').addEventListener('click', triggerAudioImport)
+  initToolbarColor($('#btn-toolbar-color'))
   $('#btn-export').addEventListener('click', () => exportProjectZip())
   $('#btn-projects').addEventListener('click', () => openProjectsDialog())
   $('#btn-import').addEventListener('click', triggerImport)
@@ -133,6 +139,41 @@ function triggerImageImport() {
           title: large.length === 1 ? 'That picture is a bit large' : 'Some pictures are a bit large',
           message: `${list}. It's added and will work, but large images make your page load slowly and use up saved space. If you can, resize it smaller (under 2 MB) before using it.`,
           confirmLabel: 'Got it',
+        })
+      }
+      // Finally, a short CSS cheat-sheet for sizing, centering and framing it.
+      if (added.length) await showImageTips(added[added.length - 1], added.length)
+    }
+    input.remove()
+  })
+  document.body.appendChild(input)
+  input.click()
+}
+
+/** Pick one or more small sound files and add them to audio/. */
+function triggerAudioImport() {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'audio/*,.mp3,.wav,.ogg,.m4a'
+  input.multiple = true
+  input.style.display = 'none'
+  input.addEventListener('change', async () => {
+    if (input.files && input.files.length) {
+      const { added, skipped, tooBig } = await importAudioFiles(input.files)
+      if (added.length) store.setActive(added[added.length - 1])
+      if (skipped.length) {
+        await confirmDialog({
+          title: 'Some files were skipped',
+          message: `These weren't sounds I could add: ${skipped.join(', ')}. Try a .mp3, .wav, .ogg or .m4a file.`,
+          confirmLabel: 'OK',
+        })
+      }
+      if (tooBig.length) {
+        const list = tooBig.map((f) => `${f.name} (${formatBytes(f.size)})`).join(', ')
+        await confirmDialog({
+          title: tooBig.length === 1 ? 'That sound file is too big' : 'Some sound files are too big',
+          message: `${list}. Sounds need to be under ${formatBytes(MAX_AUDIO_BYTES)} so your site stays quick to load and fits in saved space. Try a shorter clip or a smaller format like .mp3.`,
+          confirmLabel: 'OK',
         })
       }
     }
@@ -177,9 +218,12 @@ function wireBottomTabs() {
     btn.addEventListener('click', () => activateBottom(btn.getAttribute('data-panel')))
   })
   $('#btn-clear-console').addEventListener('click', clearConsole)
+  initCollapsibles()
 }
 
 function activateBottom(name) {
+  // Clicking a tab on a collapsed panel opens it back up.
+  setCollapsed('panel', false)
   document.querySelectorAll('.bottom-tab').forEach((b) =>
     b.classList.toggle('is-active', b.getAttribute('data-panel') === name))
   $('#problems-panel').classList.toggle('is-active', name === 'problems')

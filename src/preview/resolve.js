@@ -21,12 +21,12 @@ import { resolveRef, mimeOf, languageOf } from '../util/paths.js'
  * @returns {Promise<{ html: string }>}
  */
 export async function buildPreview(files, entryPath) {
-  // 1. Asset (image/text) data URLs, keyed by path.
+  // 1. Asset (image/audio/text) data URLs, keyed by path.
   /** @type {Map<string, string>} */
   const assetUrls = new Map()
   for (const [path, file] of Object.entries(files)) {
     const lang = languageOf(path)
-    if (lang === 'image' || lang === 'text') {
+    if (lang === 'image' || lang === 'audio' || lang === 'text') {
       assetUrls.set(path, await toDataUrl(file.content, mimeOf(path)))
     }
   }

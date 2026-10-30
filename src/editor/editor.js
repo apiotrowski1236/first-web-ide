@@ -9,7 +9,7 @@ import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { languageExtensions } from './languages.js'
 import { themeExtensions } from './theme.js'
 import { store } from '../store/project-store.js'
-import { isBinary, mimeOf } from '../util/paths.js'
+import { isBinary, mimeOf, languageOf } from '../util/paths.js'
 
 /**
  * Owns a single CodeMirror view. We keep one EditorView and swap EditorState
@@ -155,8 +155,15 @@ function showBinaryNotice(path) {
   const div = document.createElement('div')
   div.className = 'empty-editor binary-notice'
 
+  const isAudio = languageOf(path) === 'audio'
   const src = imagePreviewSrc(path, store.getFile(path)?.content)
-  if (src) {
+  if (src && isAudio) {
+    const audio = document.createElement('audio')
+    audio.className = 'binary-preview'
+    audio.controls = true
+    audio.src = src
+    div.appendChild(audio)
+  } else if (src) {
     const img = document.createElement('img')
     img.className = 'binary-preview'
     img.src = src
@@ -166,7 +173,9 @@ function showBinaryNotice(path) {
 
   const caption = document.createElement('p')
   caption.className = 'binary-caption'
-  caption.textContent = `${path} is a picture. Use it in your HTML with <img src="${path}" alt="…" /> — there's nothing to type here.`
+  caption.textContent = isAudio
+    ? `${path} is a sound. Play it on a page with <audio controls src="${path}"></audio> — there's nothing to type here.`
+    : `${path} is a picture. Use it in your HTML with <img src="${path}" alt="…" /> — there's nothing to type here.`
   div.appendChild(caption)
 
   hostEl.appendChild(div)

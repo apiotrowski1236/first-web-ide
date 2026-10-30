@@ -12,12 +12,14 @@ export function languageOf(path) {
   if (ext === '.css') return 'css'
   if (ext === '.js' || ext === '.mjs') return 'javascript'
   if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico', '.avif'].includes(ext)) return 'image'
+  if (['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac', '.weba'].includes(ext)) return 'audio'
   return 'text'
 }
 
 /** True when the file is binary (stored as a Blob, not a string). */
 export function isBinary(path) {
-  return languageOf(path) === 'image'
+  const lang = languageOf(path)
+  return lang === 'image' || lang === 'audio'
 }
 
 /** ".css" including the dot, or "" if none. */
@@ -79,6 +81,8 @@ export function mimeOf(path) {
     '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
     '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
     '.ico': 'image/x-icon', '.avif': 'image/avif',
+    '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg', '.m4a': 'audio/mp4',
+    '.aac': 'audio/aac', '.flac': 'audio/flac', '.weba': 'audio/webm',
     '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf',
     '.txt': 'text/plain',
   }
@@ -100,4 +104,26 @@ export function validateFilename(name) {
   if (/\.\./.test(n)) return "Names can't contain “..”."
   if (!extname(n)) return 'Add a file type, like .html, .css or .js.'
   return ''
+}
+
+/**
+ * Validate a folder name (no file part). Same class rules as filenames.
+ * Nested folders like "images/icons" are fine. Returns an error string, or "".
+ */
+export function validateFoldername(name) {
+  if (!name || !name.trim()) return 'Give your folder a name.'
+  const n = name.trim()
+  if (n.startsWith('/') || n.endsWith('/')) return "Don't start or end the name with a slash."
+  if (/\s/.test(n)) return 'No spaces — use a hyphen instead, like my-pictures.'
+  if (/[A-Z]/.test(n)) return 'Use lowercase letters only (the web is picky about this).'
+  if (!/^[a-z0-9_/-]+$/.test(n)) return 'Use only letters, numbers, hyphens and underscores.'
+  if (/\/\//.test(n)) return 'Only one slash between folder names.'
+  return ''
+}
+
+/** Validate just the file part of a name (no slashes allowed). */
+export function validateBasename(name) {
+  if (!name || !name.trim()) return 'Give your file a name.'
+  if (name.includes('/')) return 'Pick the folder above instead of typing a slash.'
+  return validateFilename(name)
 }
